@@ -1,7 +1,7 @@
 package main
 
 import (
-	ratelimit "github.com/JGLTechnologies/gin-rate-limit"
+	"awesomeProject2/ratelimit"
 	"github.com/redis/go-redis/v9"
 	"net/http"
 	"net/http/httputil"
