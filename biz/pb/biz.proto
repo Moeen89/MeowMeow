@@ -8,6 +8,8 @@ option go_package = "gen/v1";
 service get_users {
   rpc get_users(UserRequest) returns (UserResponse);
   rpc get_users_with_sql_inject(UserRequest_with_sql_inject) returns (UserResponse);
+  rpc check_key (key) returns (val) {}
+
 }
 
 
@@ -35,4 +37,12 @@ message User {
     int32 age = 4;
     string sex = 5;
     string createdAt = 6;
+}
+
+message key{
+    int32 authKey = 1;
+}
+
+message val{
+    int32 isTrue = 1;
 }
