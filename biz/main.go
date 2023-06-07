@@ -20,7 +20,7 @@ import (
 
 const (
 	port         = "5432"
-	dbConnection = "host=my-postgres port=5432 user=postgres password=password dbname=users sslmode=disable"
+	dbConnection = "host=localhost port=5432 user=postgres password=password dbname=users sslmode=disable"
 )
 
 type server struct {
