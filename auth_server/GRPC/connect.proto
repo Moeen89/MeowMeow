@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package GRPC;
+
+option go_package = "example.com/go-connection-grpc;go_connection_grpc";
+
+service authService {
+    rpc req_pq (Msg) returns (replyMsg) {}
+    rpc req_DH_param (NewMsg) returns (NewReplyMsg) {}
+    rpc check_key (key) returns (val) {}
+}
+
+message Msg {
+    string nonce = 1;
+    int32 message_id = 2;
+}
+
+message replyMsg {
+    string nonce = 1;
+    string server_nonce = 2;
+    int32 message_id = 3;
+    int32 p = 4;
+    int32 g = 5;
+}
+
+message NewMsg {
+    string nonce = 1;
+    string server_nonce = 2;
+    int32 message_id = 3;
+    int32 aNumber = 4;
+}
+
+message NewReplyMsg {
+    string nonce = 1;
+    string server_nonce = 2;
+    int32 message_id = 3;
+    int32 bNumber = 4;
+}
+
+message key{
+    int32 authKey = 1;
+}
+
+message val{
+    int32 isTrue = 1;
+}
