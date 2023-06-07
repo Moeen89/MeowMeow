@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type GetUsersClient interface {
 	GetUsers(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*UserResponse, error)
 	GetUsersWithSqlInject(ctx context.Context, in *UserRequestWithSqlInject, opts ...grpc.CallOption) (*UserResponse, error)
+	CheckKey(ctx context.Context, in *Key, opts ...grpc.CallOption) (*Val, error)
 }
 
 type getUsersClient struct {
@@ -52,12 +53,22 @@ func (c *getUsersClient) GetUsersWithSqlInject(ctx context.Context, in *UserRequ
 	return out, nil
 }
 
+func (c *getUsersClient) CheckKey(ctx context.Context, in *Key, opts ...grpc.CallOption) (*Val, error) {
+	out := new(Val)
+	err := c.cc.Invoke(ctx, "/biz.v1.get_users/check_key", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GetUsersServer is the server API for GetUsers service.
 // All implementations must embed UnimplementedGetUsersServer
 // for forward compatibility
 type GetUsersServer interface {
 	GetUsers(context.Context, *UserRequest) (*UserResponse, error)
 	GetUsersWithSqlInject(context.Context, *UserRequestWithSqlInject) (*UserResponse, error)
+	CheckKey(context.Context, *Key) (*Val, error)
 	mustEmbedUnimplementedGetUsersServer()
 }
 
@@ -70,6 +81,9 @@ func (UnimplementedGetUsersServer) GetUsers(context.Context, *UserRequest) (*Use
 }
 func (UnimplementedGetUsersServer) GetUsersWithSqlInject(context.Context, *UserRequestWithSqlInject) (*UserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUsersWithSqlInject not implemented")
+}
+func (UnimplementedGetUsersServer) CheckKey(context.Context, *Key) (*Val, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckKey not implemented")
 }
 func (UnimplementedGetUsersServer) mustEmbedUnimplementedGetUsersServer() {}
 
@@ -120,6 +134,24 @@ func _GetUsers_GetUsersWithSqlInject_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GetUsers_CheckKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Key)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GetUsersServer).CheckKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/biz.v1.get_users/check_key",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GetUsersServer).CheckKey(ctx, req.(*Key))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GetUsers_ServiceDesc is the grpc.ServiceDesc for GetUsers service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -134,6 +166,10 @@ var GetUsers_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "get_users_with_sql_inject",
 			Handler:    _GetUsers_GetUsersWithSqlInject_Handler,
+		},
+		{
+			MethodName: "check_key",
+			Handler:    _GetUsers_CheckKey_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

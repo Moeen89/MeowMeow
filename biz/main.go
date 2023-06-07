@@ -2,9 +2,11 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"net"
+	"time"
 
 	// "sync"
 
@@ -29,6 +31,21 @@ type server struct {
 }
 
 func (s *server) GetUsers(ctx context.Context, req *v1.UserRequest) (*v1.UserResponse, error) {
+	conn, err := grpc.Dial("localhost:5052", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("did not connect to auth server: %v", err)
+	}
+
+	defer conn.Close()
+	c := v1.NewGetUsersClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	authReq := &v1.Key{AuthKey: req.AuthKey}
+	r, err := c.CheckKey(ctx, authReq)
+	if r.IsTrue == 0 {
+		return nil, errors.New("User Authentication Failed")
+	}
 
 	if req.UserId == 0 {
 		query := "SELECT * FROM users LIMIT 100"
@@ -87,6 +104,21 @@ func (s *server) GetUsers(ctx context.Context, req *v1.UserRequest) (*v1.UserRes
 }
 
 func (s *server) GetUsersWithSqlInject(ctx context.Context, req *v1.UserRequestWithSqlInject) (*v1.UserResponse, error) {
+	conn, err := grpc.Dial("localhost:5052", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("did not connect to auth server: %v", err)
+	}
+
+	defer conn.Close()
+	c := v1.NewGetUsersClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	authReq := &v1.Key{AuthKey: req.AuthKey}
+	r, err := c.CheckKey(ctx, authReq)
+	if r.IsTrue == 0 {
+		return nil, errors.New("User Authentication Failed")
+	}
 	if req.UserId == "" {
 		query := "SELECT * FROM users LIMIT 100"
 		rows, err := s.db.Query(query)
