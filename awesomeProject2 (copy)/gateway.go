@@ -14,12 +14,14 @@ import (
 	"google.golang.org/grpc"
 
 	pb "awesomeProject2/GRPC"
+	pbs "awesomeProject2/pb"
 
 	"github.com/gin-gonic/gin"
 )
 
 const (
-	address = "localhost:5052"
+	address    = "localhost:5052"
+	addressBiz = "localhost:5062"
 )
 
 func keyFunc(c *gin.Context) string {
@@ -81,7 +83,7 @@ func createReverseProxyAuth(target string) gin.HandlerFunc {
 			replyMsg, err := c2.ReqPq(ctx, &pb.Msg{
 				Nonce:     clientNonce.(string),
 				MessageId: int32(messageId)})
-			c.JSON(http.StatusForbidden, gin.H{
+			c.JSON(http.StatusAccepted, gin.H{
 				"nonce": replyMsg.GetNonce(), "server_nonce": replyMsg.GetServerNonce(), "message_id": replyMsg.GetMessageId(), "p": replyMsg.GetP(), "g": replyMsg.G,
 			})
 			return
@@ -112,12 +114,12 @@ func createReverseProxyAuth(target string) gin.HandlerFunc {
 				ServerNonce: serverNonce,
 				MessageId:   int32(messageId),
 				ANumber:     int32(a)})
-			c.JSON(http.StatusForbidden, gin.H{
+			c.JSON(http.StatusAccepted, gin.H{
 				"b": newReplyMsg.GetBNumber(),
 			})
 			return
 		}
-		
+
 		// Modify the request
 		c.Request.URL.Scheme = targetURL.Scheme
 		c.Request.URL.Host = targetURL.Host
@@ -134,6 +136,77 @@ func createReverseProxyBiz(target string) gin.HandlerFunc {
 
 		// Create the reverse proxy
 		proxy := httputil.NewSingleHostReverseProxy(targetURL)
+
+		if c.Param("path") == "get_users" {
+			conn, err := grpc.Dial(addressBiz, grpc.WithInsecure())
+			if err != nil {
+				log.Fatalf("did not connect: %v", err)
+			}
+			defer conn.Close()
+			c2 := pbs.NewGetUsersClient(conn)
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			userId, _ := c.Get("userId")
+			idx, _ := strconv.Atoi(userId.(string))
+			idd := int32(idx)
+			messageId, _ := c.Get("userId")
+			messageid, _ := strconv.Atoi(messageId.(string))
+			message_id := int32(messageid)
+			authKey := c.GetHeader("userId")
+			authkey, _ := strconv.Atoi(authKey)
+			authkey32 := int32(authkey)
+
+			req := &pbs.UserRequest{UserId: idd, MessageId: message_id, AuthKey: authkey32}
+			r, err := c2.GetUsers(ctx, req)
+			if err != nil {
+				log.Fatalf("could not get users:  %v", err)
+
+			}
+			var x []pbs.User
+			for _, user := range r.Users {
+				x = append(x, *user)
+			}
+
+			c.JSON(http.StatusAccepted, gin.H{
+				"messageId": r.MessageId, "users": x,
+			})
+			return
+
+		}
+		if c.Param("path") == "get_users_with_sql_inject" {
+			conn, err := grpc.Dial(addressBiz, grpc.WithInsecure())
+			if err != nil {
+				log.Fatalf("did not connect: %v", err)
+			}
+			defer conn.Close()
+			c2 := pbs.NewGetUsersClient(conn)
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			userId, _ := c.Get("userId")
+			messageId, _ := c.Get("userId")
+			messageid, _ := strconv.Atoi(messageId.(string))
+			message_id := int32(messageid)
+			authKey := c.GetHeader("userId")
+			authkey, _ := strconv.Atoi(authKey)
+			authkey32 := int32(authkey)
+
+			req := &pbs.UserRequestWithSqlInject{UserId: userId.(string), MessageId: message_id, AuthKey: authkey32}
+			r, err := c2.GetUsersWithSqlInject(ctx, req)
+			if err != nil {
+				log.Fatalf("could not get users:  %v", err)
+
+			}
+			var x []pbs.User
+			for _, user := range r.Users {
+				x = append(x, *user)
+			}
+
+			c.JSON(http.StatusAccepted, gin.H{
+				"messageId": r.MessageId, "users": x,
+			})
+			return
+
+		}
 
 		// Modify the request
 		c.Request.URL.Scheme = targetURL.Scheme

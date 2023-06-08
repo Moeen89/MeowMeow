@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/bytedance/sonic v1.8.1 // indirect
 	github.com/gin-gonic/gin v1.9.0
+	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/redis/go-redis/v9 v9.0.2
