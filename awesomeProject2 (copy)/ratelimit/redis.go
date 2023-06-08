@@ -32,7 +32,7 @@ func (s *redisStoreType) Limit(key string, c *gin.Context) Info {
 	if err != nil {
 		hits = 0
 	}
-	if (ts+s.rate <= time.Now().Unix() && hits > 0) || (hits < 0 && ts+24*3600*1000*1000*1000 <= time.Now().Unix()) {
+	if (ts+s.rate <= time.Now().Unix() && hits > 0) || (hits < 0 && ts+24*int64(time.Hour.Seconds()) <= time.Now().Unix()) {
 		hits = 0
 		p.Set(s.ctx, key+"hits", hits, time.Duration(0))
 	}
@@ -47,7 +47,7 @@ func (s *redisStoreType) Limit(key string, c *gin.Context) Info {
 	if hits >= int64(s.limit) || hits < 0 {
 		hits = -1
 		p.Set(s.ctx, key+"hits", hits, time.Duration(0))
-		p.Expire(s.ctx, key+"hits", time.Duration(int64(time.Second)*24*3600*1000*1000000*2))
+		p.Expire(s.ctx, key+"hits", time.Duration(int64(time.Second)*24*int64(time.Hour.Seconds())*2))
 		_, err = p.Exec(s.ctx)
 		if err != nil {
 			if s.panicOnErr {
@@ -56,7 +56,7 @@ func (s *redisStoreType) Limit(key string, c *gin.Context) Info {
 				return Info{
 					Limit:         s.limit,
 					RateLimited:   false,
-					ResetTime:     time.Now().Add(time.Duration((24*3600*1000*1000000 - (time.Now().Unix() - ts)) * time.Second.Nanoseconds())),
+					ResetTime:     time.Now().Add(time.Duration((24*int64(time.Hour.Seconds()) - (time.Now().Unix() - ts)) * time.Second.Nanoseconds())),
 					RemainingHits: 0,
 				}
 			}
@@ -64,7 +64,7 @@ func (s *redisStoreType) Limit(key string, c *gin.Context) Info {
 		return Info{
 			Limit:         s.limit,
 			RateLimited:   true,
-			ResetTime:     time.Now().Add(time.Duration((24*3600*1000*1000000 - (time.Now().Unix() - ts)) * time.Second.Nanoseconds())),
+			ResetTime:     time.Now().Add(time.Duration((24*int64(time.Hour.Seconds()) - (time.Now().Unix() - ts)) * time.Second.Nanoseconds())),
 			RemainingHits: 0,
 		}
 	}

@@ -2,13 +2,24 @@ package main
 
 import (
 	"awesomeProject2/ratelimit"
+	"context"
 	"github.com/redis/go-redis/v9"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strconv"
 	"time"
 
+	"google.golang.org/grpc"
+
+	pb "awesomeProject2/GRPC"
+
 	"github.com/gin-gonic/gin"
+)
+
+const (
+	address = "localhost:5052"
 )
 
 func keyFunc(c *gin.Context) string {
@@ -50,7 +61,63 @@ func createReverseProxyAuth(target string) gin.HandlerFunc {
 
 		// Create the reverse proxy
 		proxy := httputil.NewSingleHostReverseProxy(targetURL)
+		if c.Param("path") == "req_pq" {
+			conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
+			if err != nil {
+				log.Fatalf("did not connect: %v", err)
+			}
+			defer func(conn *grpc.ClientConn) {
+				err := conn.Close()
+				if err != nil {
 
+				}
+			}(conn)
+			c2 := pb.NewAuthServiceClient(conn)
+			messageIdt, _ := c.Get("messageId")
+			messageId, _ := strconv.Atoi(messageIdt.(string))
+			clientNonce, _ := c.Get("nonce")
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			replyMsg, err := c2.ReqPq(ctx, &pb.Msg{
+				Nonce:     clientNonce.(string),
+				MessageId: int32(messageId)})
+			c.JSON(http.StatusForbidden, gin.H{
+				"nonce": replyMsg.GetNonce(), "server_nonce": replyMsg.GetServerNonce(), "message_id": replyMsg.GetMessageId(), "p": replyMsg.GetP(), "g": replyMsg.G,
+			})
+			return
+		} else if c.Param("path") == "req_DH_params" {
+			conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
+			if err != nil {
+				log.Fatalf("did not connect: %v", err)
+			}
+			defer func(conn *grpc.ClientConn) {
+				err := conn.Close()
+				if err != nil {
+
+				}
+			}(conn)
+			c2 := pb.NewAuthServiceClient(conn)
+			messageIdt, _ := c.Get("messageId")
+			messageId, _ := strconv.Atoi(messageIdt.(string))
+			clientNonce := "Amir"
+			serverNonce := "Hossein"
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			//randomNumber, err := generateRandomEven(10, 200)
+			at, _ := c.Get("a")
+			a, _ := strconv.Atoi(at.(string))
+
+			defer cancel()
+			newReplyMsg, err := c2.Req_DHParam(ctx, &pb.NewMsg{
+				Nonce:       clientNonce,
+				ServerNonce: serverNonce,
+				MessageId:   int32(messageId),
+				ANumber:     int32(a)})
+			c.JSON(http.StatusForbidden, gin.H{
+				"b": newReplyMsg.GetBNumber(),
+			})
+			return
+		}
+		
 		// Modify the request
 		c.Request.URL.Scheme = targetURL.Scheme
 		c.Request.URL.Host = targetURL.Host
