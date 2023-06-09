@@ -3,7 +3,8 @@ package main
 import (
 	"awesomeProject2/ratelimit"
 	"context"
-	"github.com/redis/go-redis/v9"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -11,6 +12,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/tidwall/gjson"
 	"google.golang.org/grpc"
 
 	pb "awesomeProject2/GRPC"
@@ -35,7 +37,7 @@ func errorHandler(c *gin.Context, info ratelimit.Info) {
 func createRouter() *gin.Engine {
 	router := gin.Default()
 	// This makes it so each ip can only make 5 requests per second
-	store := ratelimit.RedisStore(&ratelimit.RedisOptions{
+	/*store := ratelimit.RedisStore(&ratelimit.RedisOptions{
 		RedisClient: redis.NewClient(&redis.Options{
 			Addr: "localhost:7680",
 		}),
@@ -45,9 +47,9 @@ func createRouter() *gin.Engine {
 	mw := ratelimit.RateLimiter(store, &ratelimit.Options{
 		ErrorHandler: errorHandler,
 		KeyFunc:      keyFunc,
-	})
+	})*/
 	// Define the routes for the API Gateway
-	router.Any("/AUTH/*path", mw, createReverseProxyAuth("http://localhost:8081"))
+	router.Any("/AUTH/*path" /*mw,*/, createReverseProxyAuth("http://localhost:8081"))
 	router.Any("/BIZ/*path", createReverseProxyBiz("http://localhost:8082"))
 	return router
 }
@@ -60,10 +62,10 @@ func createReverseProxyAuth(target string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Parse the target URL
 		targetURL, _ := url.Parse(target)
-
+		fmt.Print(c.Param("path"))
 		// Create the reverse proxy
 		proxy := httputil.NewSingleHostReverseProxy(targetURL)
-		if c.Param("path") == "req_pq" {
+		if c.Param("path") == "/req_pq" {
 			conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 			if err != nil {
 				log.Fatalf("did not connect: %v", err)
@@ -75,16 +77,18 @@ func createReverseProxyAuth(target string) gin.HandlerFunc {
 				}
 			}(conn)
 			c2 := pb.NewAuthServiceClient(conn)
-			messageIdt, _ := c.Get("messageId")
-			messageId, _ := strconv.Atoi(messageIdt.(string))
-			clientNonce, _ := c.Get("nonce")
+			jsonData, _ := ioutil.ReadAll(c.Request.Body)
+			messageIdt := gjson.Get(string(jsonData), "messageId")
+			messageId, _ := strconv.Atoi(messageIdt.Str)
+			clientNonce := gjson.Get(string(jsonData), "nonce")
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
 			replyMsg, err := c2.ReqPq(ctx, &pb.Msg{
-				Nonce:     clientNonce.(string),
+				Nonce:     clientNonce.Str,
 				MessageId: int32(messageId)})
+
 			c.JSON(http.StatusAccepted, gin.H{
-				"nonce": replyMsg.GetNonce(), "server_nonce": replyMsg.GetServerNonce(), "message_id": replyMsg.GetMessageId(), "p": replyMsg.GetP(), "g": replyMsg.G,
+				"nonce": replyMsg.GetNonce(), "server_nonce": replyMsg.GetServerNonce(), "message_id": replyMsg.GetMessageId(), "p": replyMsg.GetP(), "g": replyMsg.GetG(),
 			})
 			return
 		} else if c.Param("path") == "req_DH_params" {
@@ -99,14 +103,15 @@ func createReverseProxyAuth(target string) gin.HandlerFunc {
 				}
 			}(conn)
 			c2 := pb.NewAuthServiceClient(conn)
-			messageIdt, _ := c.Get("messageId")
-			messageId, _ := strconv.Atoi(messageIdt.(string))
-			clientNonce := "Amir"
-			serverNonce := "Hossein"
+			jsonData, _ := ioutil.ReadAll(c.Request.Body)
+			messageIdt := gjson.Get(string(jsonData), "messageId")
+			messageId, _ := strconv.Atoi(messageIdt.Str)
+			clientNonce := gjson.Get(string(jsonData), "clientNonce").Str
+			serverNonce := gjson.Get(string(jsonData), "serverNonce").Str
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 			//randomNumber, err := generateRandomEven(10, 200)
-			at, _ := c.Get("a")
-			a, _ := strconv.Atoi(at.(string))
+			at := gjson.Get(string(jsonData), "a")
+			a, _ := strconv.Atoi(at.Str)
 
 			defer cancel()
 			newReplyMsg, err := c2.Req_DHParam(ctx, &pb.NewMsg{
@@ -136,7 +141,14 @@ func createReverseProxyBiz(target string) gin.HandlerFunc {
 
 		// Create the reverse proxy
 		proxy := httputil.NewSingleHostReverseProxy(targetURL)
-
+		authtoken := c.GetHeader("token")
+		if authtoken == "" {
+			c.JSON(http.StatusForbidden, gin.H{
+				"message": "AUTH require",
+			})
+			return
+			//send auth token to auth server and check token validity
+		}
 		if c.Param("path") == "get_users" {
 			conn, err := grpc.Dial(addressBiz, grpc.WithInsecure())
 			if err != nil {
@@ -146,11 +158,12 @@ func createReverseProxyBiz(target string) gin.HandlerFunc {
 			c2 := pbs.NewGetUsersClient(conn)
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
-			userId, _ := c.Get("userId")
-			idx, _ := strconv.Atoi(userId.(string))
+			jsonData, _ := ioutil.ReadAll(c.Request.Body)
+			userId := gjson.Get(string(jsonData), "userId")
+			idx, _ := strconv.Atoi(userId.Str)
 			idd := int32(idx)
-			messageId, _ := c.Get("userId")
-			messageid, _ := strconv.Atoi(messageId.(string))
+			messageId := gjson.Get(string(jsonData), "userId")
+			messageid, _ := strconv.Atoi(messageId.Str)
 			message_id := int32(messageid)
 			authKey := c.GetHeader("userId")
 			authkey, _ := strconv.Atoi(authKey)
@@ -163,12 +176,12 @@ func createReverseProxyBiz(target string) gin.HandlerFunc {
 
 			}
 			var x []pbs.User
-			for _, user := range r.Users {
+			for _, user := range r.GetUsers() {
 				x = append(x, *user)
 			}
 
 			c.JSON(http.StatusAccepted, gin.H{
-				"messageId": r.MessageId, "users": x,
+				"messageId": r.GetMessageId(), "users": x,
 			})
 			return
 
@@ -182,27 +195,28 @@ func createReverseProxyBiz(target string) gin.HandlerFunc {
 			c2 := pbs.NewGetUsersClient(conn)
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
-			userId, _ := c.Get("userId")
-			messageId, _ := c.Get("userId")
-			messageid, _ := strconv.Atoi(messageId.(string))
+			jsonData, _ := ioutil.ReadAll(c.Request.Body)
+			userId := gjson.Get(string(jsonData), "userId")
+			messageId := gjson.Get(string(jsonData), "userId")
+			messageid, _ := strconv.Atoi(messageId.Str)
 			message_id := int32(messageid)
 			authKey := c.GetHeader("userId")
 			authkey, _ := strconv.Atoi(authKey)
 			authkey32 := int32(authkey)
 
-			req := &pbs.UserRequestWithSqlInject{UserId: userId.(string), MessageId: message_id, AuthKey: authkey32}
+			req := &pbs.UserRequestWithSqlInject{UserId: userId.Str, MessageId: message_id, AuthKey: authkey32}
 			r, err := c2.GetUsersWithSqlInject(ctx, req)
 			if err != nil {
 				log.Fatalf("could not get users:  %v", err)
 
 			}
 			var x []pbs.User
-			for _, user := range r.Users {
+			for _, user := range r.GetUsers() {
 				x = append(x, *user)
 			}
 
 			c.JSON(http.StatusAccepted, gin.H{
-				"messageId": r.MessageId, "users": x,
+				"messageId": r.GetMessageId(), "users": x,
 			})
 			return
 
@@ -212,14 +226,6 @@ func createReverseProxyBiz(target string) gin.HandlerFunc {
 		c.Request.URL.Scheme = targetURL.Scheme
 		c.Request.URL.Host = targetURL.Host
 		c.Request.URL.Path = c.Param("path")
-		authtoken := c.GetHeader("token")
-		if authtoken == "" {
-			c.JSON(http.StatusForbidden, gin.H{
-				"message": "AUTH require",
-			})
-			return
-			//send auth token to auth server and check token validity
-		}
 
 		proxy.ServeHTTP(c.Writer, c.Request)
 
