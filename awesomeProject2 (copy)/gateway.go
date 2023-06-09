@@ -1,9 +1,9 @@
 package main
 
 import (
-	"awesomeProject2/ratelimit"
 	"context"
 	"fmt"
+	"github.com/JGLTechnologies/gin-rate-limit"
 	"github.com/redis/go-redis/v9"
 	"io/ioutil"
 	"log"
