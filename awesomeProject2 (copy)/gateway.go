@@ -43,7 +43,7 @@ func createRouter() *gin.Engine {
 			Addr: "localhost:7680",
 		}),
 		Rate:  time.Second,
-		Limit: 100,
+		Limit: 0,
 	})
 	mw := ratelimit.RateLimiter(store, &ratelimit.Options{
 		ErrorHandler: errorHandler,
@@ -87,6 +87,9 @@ func createReverseProxyAuth(target string) gin.HandlerFunc {
 			replyMsg, err := c2.ReqPq(ctx, &pb.Msg{
 				Nonce:     clientNonce.Str,
 				MessageId: int32(messageId)})
+			if replyMsg == nil {
+				fmt.Print("jfeiwsjiewjifjwiljmwn wjefn \n")
+			}
 
 			c.JSON(http.StatusAccepted, gin.H{
 				"nonce": replyMsg.GetNonce(), "server_nonce": replyMsg.GetServerNonce(), "message_id": replyMsg.GetMessageId(), "p": replyMsg.GetP(), "g": replyMsg.GetG(),
@@ -141,9 +144,10 @@ func createReverseProxyBiz(target string) gin.HandlerFunc {
 		targetURL, _ := url.Parse(target)
 
 		// Create the reverse proxy
+		jsonData, _ := ioutil.ReadAll(c.Request.Body)
 		proxy := httputil.NewSingleHostReverseProxy(targetURL)
-		authtoken := c.GetHeader("token")
-		if authtoken == "" {
+		authtoken := gjson.Get(string(jsonData), "authKey")
+		if authtoken.Str == "" {
 			c.JSON(http.StatusForbidden, gin.H{
 				"message": "AUTH require",
 			})
@@ -159,14 +163,13 @@ func createReverseProxyBiz(target string) gin.HandlerFunc {
 			c2 := pbs.NewGetUsersClient(conn)
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
-			jsonData, _ := ioutil.ReadAll(c.Request.Body)
 			userId := gjson.Get(string(jsonData), "userId")
 			idx, _ := strconv.Atoi(userId.Str)
 			idd := int32(idx)
-			messageId := gjson.Get(string(jsonData), "userId")
+			messageId := gjson.Get(string(jsonData), "messageId")
 			messageid, _ := strconv.Atoi(messageId.Str)
 			message_id := int32(messageid)
-			authKey := c.GetHeader("userId")
+			authKey := authtoken.Str
 			authkey, _ := strconv.Atoi(authKey)
 			authkey32 := int32(authkey)
 
@@ -198,10 +201,10 @@ func createReverseProxyBiz(target string) gin.HandlerFunc {
 			defer cancel()
 			jsonData, _ := ioutil.ReadAll(c.Request.Body)
 			userId := gjson.Get(string(jsonData), "userId")
-			messageId := gjson.Get(string(jsonData), "userId")
+			messageId := gjson.Get(string(jsonData), "messageId")
 			messageid, _ := strconv.Atoi(messageId.Str)
 			message_id := int32(messageid)
-			authKey := c.GetHeader("userId")
+			authKey := authtoken.Str
 			authkey, _ := strconv.Atoi(authKey)
 			authkey32 := int32(authkey)
 
