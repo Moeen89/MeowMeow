@@ -4,6 +4,7 @@ import (
 	"awesomeProject2/ratelimit"
 	"context"
 	"fmt"
+	"github.com/redis/go-redis/v9"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -37,7 +38,7 @@ func errorHandler(c *gin.Context, info ratelimit.Info) {
 func createRouter() *gin.Engine {
 	router := gin.Default()
 	// This makes it so each ip can only make 5 requests per second
-	/*store := ratelimit.RedisStore(&ratelimit.RedisOptions{
+	store := ratelimit.RedisStore(&ratelimit.RedisOptions{
 		RedisClient: redis.NewClient(&redis.Options{
 			Addr: "localhost:7680",
 		}),
@@ -47,9 +48,9 @@ func createRouter() *gin.Engine {
 	mw := ratelimit.RateLimiter(store, &ratelimit.Options{
 		ErrorHandler: errorHandler,
 		KeyFunc:      keyFunc,
-	})*/
+	})
 	// Define the routes for the API Gateway
-	router.Any("/AUTH/*path" /*mw,*/, createReverseProxyAuth("http://localhost:8081"))
+	router.Any("/AUTH/*path", mw, createReverseProxyAuth("http://localhost:8081"))
 	router.Any("/BIZ/*path", createReverseProxyBiz("http://localhost:8082"))
 	return router
 }
