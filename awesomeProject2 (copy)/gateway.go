@@ -91,7 +91,7 @@ func createReverseProxyAuth(target string) gin.HandlerFunc {
 				"nonce": replyMsg.GetNonce(), "server_nonce": replyMsg.GetServerNonce(), "message_id": replyMsg.GetMessageId(), "p": replyMsg.GetP(), "g": replyMsg.GetG(),
 			})
 			return
-		} else if c.Param("path") == "req_DH_params" {
+		} else if c.Param("path") == "/req_DH_params" {
 			conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 			if err != nil {
 				log.Fatalf("did not connect: %v", err)
@@ -149,7 +149,7 @@ func createReverseProxyBiz(target string) gin.HandlerFunc {
 			return
 			//send auth token to auth server and check token validity
 		}
-		if c.Param("path") == "get_users" {
+		if c.Param("path") == "/get_users" {
 			conn, err := grpc.Dial(addressBiz, grpc.WithInsecure())
 			if err != nil {
 				log.Fatalf("did not connect: %v", err)
@@ -186,7 +186,7 @@ func createReverseProxyBiz(target string) gin.HandlerFunc {
 			return
 
 		}
-		if c.Param("path") == "get_users_with_sql_inject" {
+		if c.Param("path") == "/get_users_with_sql_inject" {
 			conn, err := grpc.Dial(addressBiz, grpc.WithInsecure())
 			if err != nil {
 				log.Fatalf("did not connect: %v", err)
