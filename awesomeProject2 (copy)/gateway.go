@@ -40,10 +40,10 @@ func createRouter() *gin.Engine {
 	// This makes it so each ip can only make 5 requests per second
 	store := ratelimit.RedisStore(&ratelimit.RedisOptions{
 		RedisClient: redis.NewClient(&redis.Options{
-			Addr: "localhost:7680",
+			Addr: "localhost:6379",
 		}),
 		Rate:  time.Second,
-		Limit: 0,
+		Limit: 100,
 	})
 	mw := ratelimit.RateLimiter(store, &ratelimit.Options{
 		ErrorHandler: errorHandler,
@@ -161,7 +161,7 @@ func createReverseProxyBiz(target string) gin.HandlerFunc {
 			}
 			defer conn.Close()
 			c2 := pbs.NewGetUsersClient(conn)
-			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 			defer cancel()
 			userId := gjson.Get(string(jsonData), "userId")
 			idx, _ := strconv.Atoi(userId.Str)
@@ -176,19 +176,22 @@ func createReverseProxyBiz(target string) gin.HandlerFunc {
 			req := &pbs.UserRequest{UserId: idd, MessageId: message_id, AuthKey: authkey32}
 			r, err := c2.GetUsers(ctx, req)
 			if err != nil {
-				log.Fatalf("could not get users:  %v", err)
+				log.Printf("could not get users:  %v", err)
+				c.JSON(http.StatusAccepted, gin.H{
+					"error": "there is no user with this auth key",
+				})
+				return
+			} else {
+				var x []pbs.User
+				for _, user := range r.GetUsers() {
+					x = append(x, *user)
+				}
 
+				c.JSON(http.StatusAccepted, gin.H{
+					"messageId": r.GetMessageId(), "users": x,
+				})
+				return
 			}
-			var x []pbs.User
-			for _, user := range r.GetUsers() {
-				x = append(x, *user)
-			}
-
-			c.JSON(http.StatusAccepted, gin.H{
-				"messageId": r.GetMessageId(), "users": x,
-			})
-			return
-
 		}
 		if c.Param("path") == "/get_users_with_sql_inject" {
 			conn, err := grpc.Dial(addressBiz, grpc.WithInsecure())

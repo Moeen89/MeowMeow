@@ -10,6 +10,7 @@ import (
 
 	// "sync"
 
+	v2 "sina/GRPC"
 	v1 "sina/pb"
 
 	"github.com/jackc/pgx/pgtype"
@@ -37,16 +38,19 @@ func (s *server) GetUsers(ctx context.Context, req *v1.UserRequest) (*v1.UserRes
 	}
 
 	defer conn.Close()
-	c := v1.NewGetUsersClient(conn)
+	c := v2.NewAuthServiceClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	authReq := &v1.Key{AuthKey: req.AuthKey}
+	authReq := &v2.Key{AuthKey: req.AuthKey}
 	r, err := c.CheckKey(ctx, authReq)
+	if err != nil {
+		fmt.Println("%v", err)
+	}
+	fmt.Println(r.IsTrue)
 	if r.IsTrue == 0 {
 		return nil, errors.New("User Authentication Failed")
 	}
-
 	if req.UserId == 0 {
 		query := "SELECT * FROM users LIMIT 100"
 		rows, err := s.db.Query(query)

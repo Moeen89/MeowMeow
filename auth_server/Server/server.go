@@ -181,7 +181,7 @@ func (c *connect) Req_DHParam(ctx context.Context, in *pb.NewMsg) (*pb.NewReplyM
 	}, nil
 }
 
-func (c *connect) checkKey(ctx context.Context, in *pb.Key) (*pb.Val, error) {
+func (c *connect) CheckKey(ctx context.Context, in *pb.Key) (*pb.Val, error) {
 	key := in.GetAuthKey()
 	return &pb.Val{
 		IsTrue: int32(client.Exists(ctx, strconv.Itoa(int(key))).Val()),
