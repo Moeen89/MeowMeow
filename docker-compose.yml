@@ -2,9 +2,7 @@ version: '3.8'
 
 services:
   nginx:
-    build:
-      context: .
-      dockerfile: ./custom_nginx/Dockerfile
+    build: ./custom_nginx
     container_name: nginx
     restart: always
     ports:
@@ -15,33 +13,25 @@ services:
     network_mode: host
 
   gateway:
-    build:
-      context: .
-      dockerfile: ./gateway/Dockerfile
+    build: ./gateway
     container_name: gateway-server
     restart: on-failure
     network_mode: host
   
   auth:
-    build:
-      context: .
-      dockerfile: ./auth_server/Dockerfile
+    build: ./auth_server
     container_name: auth-server
     restart: on-failure
     network_mode: host
 
   biz:
-    build:
-      context: .
-      dockerfile: ./biz/Dockerfile
+    build: ./biz
     container_name: biz-server
     restart: on-failure
     network_mode: host
 
   postgres:
-    build:
-      context: .
-      dockerfile: ./custom_postgres/Dockerfile
+    build: ./custom_postgres
     restart: always
     container_name: postgres
     ports:
