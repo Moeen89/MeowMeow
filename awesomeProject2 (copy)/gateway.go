@@ -27,30 +27,35 @@ const (
 	addressBiz = "localhost:5062"
 )
 
+var client = redis.NewClient(&redis.Options{
+	Addr:     "localhost:6379",
+	Password: "",
+	DB:       0,
+})
+
 func keyFunc(c *gin.Context) string {
 	return c.ClientIP()
 }
 
 func errorHandler(c *gin.Context, info ratelimit.Info) {
 	c.String(429, "Too many requests. Try again in "+time.Until(info.ResetTime).String())
+	client.Set(c, "ip"+c.ClientIP(), "banned", 24*time.Hour)
 }
 
 func createRouter() *gin.Engine {
 	router := gin.Default()
 	// This makes it so each ip can only make 5 requests per second
 	store := ratelimit.RedisStore(&ratelimit.RedisOptions{
-		RedisClient: redis.NewClient(&redis.Options{
-			Addr: "localhost:6379",
-		}),
-		Rate:  time.Second,
-		Limit: 100,
+		RedisClient: client,
+		Rate:        time.Second,
+		Limit:       100,
 	})
 	mw := ratelimit.RateLimiter(store, &ratelimit.Options{
 		ErrorHandler: errorHandler,
 		KeyFunc:      keyFunc,
 	})
 	// Define the routes for the API Gateway
-	router.Any("/AUTH/*path", mw, createReverseProxyAuth("http://localhost:8081"))
+	router.Any("/AUTH/*path", creatLim(), mw, createReverseProxyAuth("http://localhost:8081"))
 	router.Any("/BIZ/*path", createReverseProxyBiz("http://localhost:8082"))
 	return router
 }
@@ -59,6 +64,18 @@ func startServer(router *gin.Engine) {
 	// Start the API Gateway
 	router.Run(":8080")
 }
+func creatLim() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ip := c.ClientIP()
+		if client.Exists(c, "ip"+ip).Val() == 1 {
+			c.String(429, "Too many requests. banned for 24h")
+			return
+		}
+		c.Next()
+
+	}
+}
+
 func createReverseProxyAuth(target string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Parse the target URL
@@ -200,9 +217,8 @@ func createReverseProxyBiz(target string) gin.HandlerFunc {
 			}
 			defer conn.Close()
 			c2 := pbs.NewGetUsersClient(conn)
-			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 			defer cancel()
-			jsonData, _ := ioutil.ReadAll(c.Request.Body)
 			userId := gjson.Get(string(jsonData), "userId")
 			messageId := gjson.Get(string(jsonData), "messageId")
 			messageid, _ := strconv.Atoi(messageId.Str)
@@ -214,19 +230,22 @@ func createReverseProxyBiz(target string) gin.HandlerFunc {
 			req := &pbs.UserRequestWithSqlInject{UserId: userId.Str, MessageId: message_id, AuthKey: authkey32}
 			r, err := c2.GetUsersWithSqlInject(ctx, req)
 			if err != nil {
-				log.Fatalf("could not get users:  %v", err)
+				log.Printf("could not get users:  %v", err)
+				c.JSON(http.StatusAccepted, gin.H{
+					"error": "there is no user with this auth key",
+				})
+				return
+			} else {
+				var x []pbs.User
+				for _, user := range r.GetUsers() {
+					x = append(x, *user)
+				}
 
+				c.JSON(http.StatusAccepted, gin.H{
+					"messageId": r.GetMessageId(), "users": x,
+				})
+				return
 			}
-			var x []pbs.User
-			for _, user := range r.GetUsers() {
-				x = append(x, *user)
-			}
-
-			c.JSON(http.StatusAccepted, gin.H{
-				"messageId": r.GetMessageId(), "users": x,
-			})
-			return
-
 		}
 
 		// Modify the request
