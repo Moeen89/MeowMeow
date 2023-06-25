@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  nginx:
+    build: ./custom_nginx
+    container_name: nginx
+    restart: always
+    ports:
+      - '443:443'
+      - '80:80'
+    volumes:
+      - ./nginx_conf:/etc/nginx/conf.d
+    network_mode: host
+
+  gateway:
+    build: ./gateway
+    container_name: gateway-server
+    restart: on-failure
+    network_mode: host
+  
+  auth:
+    build: ./auth_server
+    container_name: auth-server
+    restart: on-failure
+    network_mode: host
+
+  biz:
+    build: ./biz
+    container_name: biz-server
+    restart: on-failure
+    network_mode: host
+
+  postgres:
+    build: ./custom_postgres
+    restart: always
+    container_name: postgres
+    ports:
+      - '5432:5432'
+
+  redis:
+    image: redis:7.0.11-alpine
+    restart: always
+    container_name: redis
+    ports:
+      - '6379:6379'

@@ -26,16 +26,18 @@
 # COPY --from=build /app/app .
 
 # # Expose the gRPC port (replace with the appropriate port number)
-# EXPOSE 5062
+# EXPOSE 6433
 
 # # Run the Go application
 # CMD ["./app"]
+
 
 FROM golang:latest
 WORKDIR /go/src/app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
+# COPY ./Server .
 RUN go build -o myapp .
-EXPOSE 5062
+EXPOSE 6433
 CMD ["./myapp"]
