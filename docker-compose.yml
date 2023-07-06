@@ -2,14 +2,15 @@ version: '3.8'
 
 services:
   nginx:
-    build: ./custom_nginx
-    container_name: nginx
+    # build: ./custom_nginx
+    # container_name: nginx
+    image: nginx:latest
     restart: always
     ports:
       - '443:443'
       - '80:80'
     volumes:
-      - ./nginx_conf:/etc/nginx/conf.d
+      - ./custom_nginx/conf:/etc/nginx/conf.d
     network_mode: host
 
   gateway:
