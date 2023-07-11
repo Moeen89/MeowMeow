@@ -4,14 +4,15 @@ import (
 	"awesomeProject2/docs"
 	"context"
 	"fmt"
-	"github.com/JGLTechnologies/gin-rate-limit"
-	"github.com/redis/go-redis/v9"
-	swaggerfiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/JGLTechnologies/gin-rate-limit"
+	"github.com/redis/go-redis/v9"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"google.golang.org/grpc"
 
@@ -103,9 +104,9 @@ func creatLim() gin.HandlerFunc {
 
 // @BasePath /AUTH
 
-// @Summary handle authentication
+// @Summary Sends request for "p" and "q"
 // @Schemes
-// @Description handle req_pq and req_DHparam of auth serveer, by receive http as input, and connecting to auth server and using grpc and return result
+// @Description Handles req_pq of auth server, by receiving http as input, connecting to auth server, using grpc and return result.
 // @Tags Auth
 // @Accept json
 // @Produce json
@@ -151,9 +152,9 @@ func req_pq(c *gin.Context) {
 }
 
 // @BasePath /AUTH
-// @Summary handle authentication
+// @Summary Sends request for public key.
 // @Schemes
-// @Description handle req_pq and req_DHparam of auth serveer, by receive http as input, and connecting to auth server and using grpc and return result
+// @Description Handles req_DHparam of auth server, by receiving http as input, connecting to auth server, using grpc and return result.
 // @Tags Auth
 // @Accept json
 // @Produce json
@@ -193,9 +194,9 @@ func req_DH_params(c *gin.Context) {
 }
 
 // @BasePath /AUTH
-// @Summary handle authentication
+// @Summary Gets users from database.
 // @Schemes
-// @Description handle req_pq and req_DHparam of auth serveer, by receive http as input, and connecting to auth server and using grpc and return result
+// @Description This function gets users based on userId, if empty, returns the first 100 records of the table in the databse.
 // @Tags Auth
 // @Accept json
 // @Produce json
@@ -253,9 +254,9 @@ func get_users(c *gin.Context) {
 }
 
 // @BasePath /AUTH
-// @Summary handle authentication
+// @Summary Gets users from database.
 // @Schemes
-// @Description handle req_pq and req_DHparam of auth serveer, by receive http as input, and connecting to auth server and using grpc and return result
+// @Description This function gets users based on userId, if empty, returns the first 100 records of the table in the databse. This method allows for sql injection.
 // @Tags Auth
 // @Accept json
 // @Produce json
@@ -313,5 +314,6 @@ func get_users_with_sql_inject(c *gin.Context) {
 }
 
 func main() {
+	fmt.Print("Gateway starting ...")
 	startServer()
 }
