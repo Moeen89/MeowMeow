@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package GRPC;
+package meow;
 
 option go_package = "example.com/go-connection-grpc;go_connection_grpc";
 

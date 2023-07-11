@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"strconv"
 	"time"
@@ -55,14 +54,14 @@ func createRouter() *gin.Engine {
 		KeyFunc:      keyFunc,
 	})
 	// Define the routes for the API Gateway
-	router.Any("/AUTH/*path", creatLim(), mw, createReverseProxyAuth("http://localhost:8081"))
-	router.Any("/BIZ/*path", createReverseProxyBiz("http://localhost:8082"))
+	router.Any("/AUTH/*path", creatLim(), mw, createReverseProxyAuth("http://localhost:5052"))
+	router.Any("/BIZ/*path", createReverseProxyBiz("http://localhost:5062"))
 	return router
 }
 
 func startServer(router *gin.Engine) {
 	// Start the API Gateway
-	router.Run(":8080")
+	router.Run(":6433")
 }
 func creatLim() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -82,7 +81,7 @@ func createReverseProxyAuth(target string) gin.HandlerFunc {
 		targetURL, _ := url.Parse(target)
 		fmt.Print(c.Param("path"))
 		// Create the reverse proxy
-		proxy := httputil.NewSingleHostReverseProxy(targetURL)
+		//proxy := httputil.NewSingleHostReverseProxy(targetURL)
 		if c.Param("path") == "/req_pq" {
 			conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 			if err != nil {
@@ -152,7 +151,7 @@ func createReverseProxyAuth(target string) gin.HandlerFunc {
 		c.Request.URL.Path = c.Param("path")
 
 		// Let the reverse proxy do its job
-		proxy.ServeHTTP(c.Writer, c.Request)
+		//proxy.ServeHTTP(c.Writer, c.Request)
 	}
 }
 func createReverseProxyBiz(target string) gin.HandlerFunc {
@@ -162,7 +161,7 @@ func createReverseProxyBiz(target string) gin.HandlerFunc {
 
 		// Create the reverse proxy
 		jsonData, _ := ioutil.ReadAll(c.Request.Body)
-		proxy := httputil.NewSingleHostReverseProxy(targetURL)
+		//proxy := httputil.NewSingleHostReverseProxy(targetURL)
 		authtoken := gjson.Get(string(jsonData), "authKey")
 		if authtoken.Str == "" {
 			c.JSON(http.StatusForbidden, gin.H{
@@ -253,7 +252,7 @@ func createReverseProxyBiz(target string) gin.HandlerFunc {
 		c.Request.URL.Host = targetURL.Host
 		c.Request.URL.Path = c.Param("path")
 
-		proxy.ServeHTTP(c.Writer, c.Request)
+		//proxy.ServeHTTP(c.Writer, c.Request)
 
 	}
 }
