@@ -1,13 +1,113 @@
 basePath: /AUTH
+definitions:
+  main.req_get_users:
+    properties:
+      authKey:
+        type: string
+      messageId:
+        type: string
+      userId:
+        type: string
+    type: object
+  main.req_req_DH_params:
+    properties:
+      a:
+        type: string
+      clientNonce:
+        type: string
+      messageId:
+        type: string
+      serverNonce:
+        type: string
+    type: object
+  main.req_req_pq:
+    properties:
+      messageId:
+        type: string
+      nonce:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
-  /gateway/auth:
-    get:
+  /AUTH/req_DH_params:
+    post:
       consumes:
       - application/json
       description: handle req_pq and req_DHparam of auth serveer, by receive http
         as input, and connecting to auth server and using grpc and return result
+      parameters:
+      - description: nonce and message id for pq
+        in: body
+        name: data
+        schema:
+          $ref: '#/definitions/main.req_req_DH_params'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            type: string
+      summary: handle authentication
+      tags:
+      - Auth
+  /AUTH/req_pq:
+    post:
+      consumes:
+      - application/json
+      description: handle req_pq and req_DHparam of auth serveer, by receive http
+        as input, and connecting to auth server and using grpc and return result
+      parameters:
+      - description: nonce and message id for pq
+        in: body
+        name: data
+        schema:
+          $ref: '#/definitions/main.req_req_pq'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            type: string
+      summary: handle authentication
+      tags:
+      - Auth
+  /BIZ/get_users:
+    post:
+      consumes:
+      - application/json
+      description: handle req_pq and req_DHparam of auth serveer, by receive http
+        as input, and connecting to auth server and using grpc and return result
+      parameters:
+      - description: nonce and message id for pq
+        in: body
+        name: data
+        schema:
+          $ref: '#/definitions/main.req_get_users'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            type: string
+      summary: handle authentication
+      tags:
+      - Auth
+  /BIZ/get_users_with_sql_inject:
+    post:
+      consumes:
+      - application/json
+      description: handle req_pq and req_DHparam of auth serveer, by receive http
+        as input, and connecting to auth server and using grpc and return result
+      parameters:
+      - description: nonce and message id for pq
+        in: body
+        name: data
+        schema:
+          $ref: '#/definitions/main.req_get_users'
       produces:
       - application/json
       responses:

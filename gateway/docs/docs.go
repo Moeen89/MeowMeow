@@ -16,8 +16,8 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/gateway/auth": {
-            "get": {
+        "/AUTH/req_DH_params": {
+            "post": {
                 "description": "handle req_pq and req_DHparam of auth serveer, by receive http as input, and connecting to auth server and using grpc and return result",
                 "consumes": [
                     "application/json"
@@ -29,6 +29,16 @@ const docTemplate = `{
                     "Auth"
                 ],
                 "summary": "handle authentication",
+                "parameters": [
+                    {
+                        "description": "nonce and message id for pq",
+                        "name": "data",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/main.req_req_DH_params"
+                        }
+                    }
+                ],
                 "responses": {
                     "202": {
                         "description": "Accepted",
@@ -36,6 +46,149 @@ const docTemplate = `{
                             "type": "string"
                         }
                     }
+                }
+            }
+        },
+        "/AUTH/req_pq": {
+            "post": {
+                "description": "handle req_pq and req_DHparam of auth serveer, by receive http as input, and connecting to auth server and using grpc and return result",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "handle authentication",
+                "parameters": [
+                    {
+                        "description": "nonce and message id for pq",
+                        "name": "data",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/main.req_req_pq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/BIZ/get_users": {
+            "post": {
+                "description": "handle req_pq and req_DHparam of auth serveer, by receive http as input, and connecting to auth server and using grpc and return result",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "handle authentication",
+                "parameters": [
+                    {
+                        "description": "nonce and message id for pq",
+                        "name": "data",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/main.req_get_users"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/BIZ/get_users_with_sql_inject": {
+            "post": {
+                "description": "handle req_pq and req_DHparam of auth serveer, by receive http as input, and connecting to auth server and using grpc and return result",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "handle authentication",
+                "parameters": [
+                    {
+                        "description": "nonce and message id for pq",
+                        "name": "data",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/main.req_get_users"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "main.req_get_users": {
+            "type": "object",
+            "properties": {
+                "authKey": {
+                    "type": "string"
+                },
+                "messageId": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "main.req_req_DH_params": {
+            "type": "object",
+            "properties": {
+                "a": {
+                    "type": "string"
+                },
+                "clientNonce": {
+                    "type": "string"
+                },
+                "messageId": {
+                    "type": "string"
+                },
+                "serverNonce": {
+                    "type": "string"
+                }
+            }
+        },
+        "main.req_req_pq": {
+            "type": "object",
+            "properties": {
+                "messageId": {
+                    "type": "string"
+                },
+                "nonce": {
+                    "type": "string"
                 }
             }
         }
