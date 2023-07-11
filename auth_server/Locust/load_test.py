@@ -24,7 +24,7 @@ import connect_pb2_grpc
 def get_random_string(length):
     # choose from all lowercase letter
     letters = string.ascii_lowercase
-    return result_str = ''.join(random.choice(letters) for i in range(length))
+    return ''.join(random.choice(letters) for i in range(length))
 
 
 def stopwatch(func):
@@ -78,7 +78,7 @@ class GRPCMyLocust(FastHttpUser):
                 stub = connect_pb2_grpc.authServiceStub(channel)
                 name = get_random_string(10)
                 response = stub.req_pq(connect_pb2.Msg(nonce=name,message_id=1))
-                responce = stub.req_DH_param(connect_pb2.NewMsg(nonce = name, message_id=2,aNumber =responce.q ,server_nonce=responce.server_nonce))
+
 
         except (KeyboardInterrupt, SystemExit):
             sys.exit(0)

@@ -1,0 +1,21 @@
+basePath: /AUTH
+info:
+  contact: {}
+paths:
+  /gateway/auth:
+    get:
+      consumes:
+      - application/json
+      description: handle req_pq and req_DHparam of auth serveer, by receive http
+        as input, and connecting to auth server and using grpc and return result
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            type: string
+      summary: handle authentication
+      tags:
+      - Auth
+swagger: "2.0"
