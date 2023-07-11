@@ -18,8 +18,8 @@ import string
 from locust.contrib.fasthttp import FastHttpUser
 from locust import task, events, constant
 from locust.runners import STATE_STOPPING, STATE_STOPPED, STATE_CLEANUP, WorkerRunner
-import biz_pb2
-import biz_pb2_grpc
+import connect_pb2
+import connect_pb2_grpc
 
 def get_random_string(length):
     # choose from all lowercase letter
@@ -58,7 +58,7 @@ def stopwatch(func):
     return wrapper
 
 class GRPCMyLocust(FastHttpUser):
-    host = 'http://127.0.0.1:5062'
+    host = 'http://127.0.0.1:5052'
     wait_time = constant(0)
 
     def on_start(self):
@@ -74,9 +74,11 @@ class GRPCMyLocust(FastHttpUser):
     def grpc_client_task(self):
         """To be updated"""
         try:
-            with grpc.insecure_channel('127.0.0.1:5062') as channel:
-                stub = biz_pb2_grpc.get_usersStub(channel)
-                response = stub.get_users(biz_pb2.UserRequest(user_id=random.randint(1,200),message_id=1,auth_key=2))
+            with grpc.insecure_channel('127.0.0.1:5052') as channel:
+                stub = connect_pb2_grpc.authServiceStub(channel)
+                name = get_random_string(10)
+                response = stub.req_pq(connect_pb2.Msg(nonce=name,message_id=1))
+                rp = stub.req_DH_param(connect_pb2.NewMsg(nonce=name,server_nonce=response.server_nonce,message_id=2 ,aNumber= 8))
 
         except (KeyboardInterrupt, SystemExit):
             sys.exit(0)
