@@ -18,7 +18,7 @@ const docTemplate = `{
     "paths": {
         "/AUTH/req_DH_params": {
             "post": {
-                "description": "handle req_pq and req_DHparam of auth serveer, by receive http as input, and connecting to auth server and using grpc and return result",
+                "description": "Handles req_DHparam of auth server, by receiving http as input, connecting to auth server, using grpc and return result.",
                 "consumes": [
                     "application/json"
                 ],
@@ -28,7 +28,7 @@ const docTemplate = `{
                 "tags": [
                     "Auth"
                 ],
-                "summary": "handle authentication",
+                "summary": "Sends request for public key.",
                 "parameters": [
                     {
                         "description": "nonce and message id for pq",
@@ -51,7 +51,7 @@ const docTemplate = `{
         },
         "/AUTH/req_pq": {
             "post": {
-                "description": "handle req_pq and req_DHparam of auth serveer, by receive http as input, and connecting to auth server and using grpc and return result",
+                "description": "Handles req_pq of auth server, by receiving http as input, connecting to auth server, using grpc and return result.",
                 "consumes": [
                     "application/json"
                 ],
@@ -61,7 +61,7 @@ const docTemplate = `{
                 "tags": [
                     "Auth"
                 ],
-                "summary": "handle authentication",
+                "summary": "Sends request for \"p\" and \"q\"",
                 "parameters": [
                     {
                         "description": "nonce and message id for pq",
@@ -84,7 +84,7 @@ const docTemplate = `{
         },
         "/BIZ/get_users": {
             "post": {
-                "description": "handle req_pq and req_DHparam of auth serveer, by receive http as input, and connecting to auth server and using grpc and return result",
+                "description": "This function gets users based on userId, if empty, returns the first 100 records of the table in the databse.",
                 "consumes": [
                     "application/json"
                 ],
@@ -94,7 +94,7 @@ const docTemplate = `{
                 "tags": [
                     "Auth"
                 ],
-                "summary": "handle authentication",
+                "summary": "Gets users from database.",
                 "parameters": [
                     {
                         "description": "nonce and message id for pq",
@@ -117,7 +117,7 @@ const docTemplate = `{
         },
         "/BIZ/get_users_with_sql_inject": {
             "post": {
-                "description": "handle req_pq and req_DHparam of auth serveer, by receive http as input, and connecting to auth server and using grpc and return result",
+                "description": "This function gets users based on userId, if empty, returns the first 100 records of the table in the databse. This method allows for sql injection.",
                 "consumes": [
                     "application/json"
                 ],
@@ -127,7 +127,7 @@ const docTemplate = `{
                 "tags": [
                     "Auth"
                 ],
-                "summary": "handle authentication",
+                "summary": "Gets users from database.",
                 "parameters": [
                     {
                         "description": "nonce and message id for pq",

@@ -34,8 +34,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: handle req_pq and req_DHparam of auth serveer, by receive http
-        as input, and connecting to auth server and using grpc and return result
+      description: Handles req_DHparam of auth server, by receiving http as input,
+        connecting to auth server, using grpc and return result.
       parameters:
       - description: nonce and message id for pq
         in: body
@@ -49,15 +49,15 @@ paths:
           description: Accepted
           schema:
             type: string
-      summary: handle authentication
+      summary: Sends request for public key.
       tags:
       - Auth
   /AUTH/req_pq:
     post:
       consumes:
       - application/json
-      description: handle req_pq and req_DHparam of auth serveer, by receive http
-        as input, and connecting to auth server and using grpc and return result
+      description: Handles req_pq of auth server, by receiving http as input, connecting
+        to auth server, using grpc and return result.
       parameters:
       - description: nonce and message id for pq
         in: body
@@ -71,15 +71,15 @@ paths:
           description: Accepted
           schema:
             type: string
-      summary: handle authentication
+      summary: Sends request for "p" and "q"
       tags:
       - Auth
   /BIZ/get_users:
     post:
       consumes:
       - application/json
-      description: handle req_pq and req_DHparam of auth serveer, by receive http
-        as input, and connecting to auth server and using grpc and return result
+      description: This function gets users based on userId, if empty, returns the
+        first 100 records of the table in the databse.
       parameters:
       - description: nonce and message id for pq
         in: body
@@ -93,15 +93,16 @@ paths:
           description: Accepted
           schema:
             type: string
-      summary: handle authentication
+      summary: Gets users from database.
       tags:
       - Auth
   /BIZ/get_users_with_sql_inject:
     post:
       consumes:
       - application/json
-      description: handle req_pq and req_DHparam of auth serveer, by receive http
-        as input, and connecting to auth server and using grpc and return result
+      description: This function gets users based on userId, if empty, returns the
+        first 100 records of the table in the databse. This method allows for sql
+        injection.
       parameters:
       - description: nonce and message id for pq
         in: body
@@ -115,7 +116,7 @@ paths:
           description: Accepted
           schema:
             type: string
-      summary: handle authentication
+      summary: Gets users from database.
       tags:
       - Auth
 swagger: "2.0"
