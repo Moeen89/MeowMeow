@@ -1,0 +1,28 @@
+Biz:
+# cd to biz directory and run these command:
+docker build -t my-biz .
+docker run -it --network=host --name my-bizc --restart=on-failure  my-biz 
+
+Postgres:
+# cd to custom_postgres directory and run these command:
+docker build -t my-post .
+docker run -it --network=host --name my-postc --restart=always  my-post
+
+Gateway:
+# cd to gateway directory and run these command:
+docker build -t my-gateway .
+docker run -it --network=host --name my-gatewayc --restart=on-failure  my-gateway
+
+Auth:
+# cd to auth_server directory and run these command:
+docker build -t my-auth .
+docker run -it --network=host --name my-authc --restart=on-failure  my-auth
+
+
+Nginx:
+# cd to projec main directory and run these commands
+docker run -it --network=host --name my-ngin --restart=always -p 443:443 -p 80:80 -v ./custom_nginx/conf:/etc/nginx/conf.d nginx:latest
+
+Redis:
+# just run these commands:
+docker run -it --network=host --name my-redisc --restart=always  -p 6379:6379 redis
