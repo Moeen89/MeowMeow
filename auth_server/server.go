@@ -6,7 +6,6 @@ import (
 	"crypto/sha1"
 	pb "example.com/go-connection-grpc/GRPC"
 	"fmt"
-	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"log"
 	"math/big"
@@ -102,23 +101,22 @@ func powInt(x, y, p int64) int32 {
 func (c *connect) ReqPq(ctx context.Context, in *pb.Msg) (*pb.ReplyMsg, error) {
 	clientNonce := in.GetNonce()
 	/// clientMessageId := in.GetMessageId()
-	// TODO
-	// serverNonce := generateRandomText()
+	serverNonce := generateRandomText()
 	serverMessageId, err := generateRandomOdd(100, 100000)
 	if err != nil {
 		log.Printf("server messageId is 0!")
 	}
-	//pNumber, err := generateRandomPrime(100, 1000)
-	//if err != nil {
-	//	log.Printf("p_number is not set!")
-	//}
-	//gNumber, err := generateRandomPrime(3, 1000)
-	//if err != nil {
-	//	fmt.Println("g_number is not set", err)
-	//}
-	serverNonce := "Hossein"
-	pNumber := 23
-	gNumber := 5
+	pNumber, err := generateRandomPrime(100, 1000)
+	if err != nil {
+		log.Printf("p_number is not set!")
+	}
+	gNumber, err := generateRandomPrime(3, 1000)
+	if err != nil {
+		fmt.Println("g_number is not set", err)
+	}
+	//serverNonce := "Hossein"
+	//pNumber := 23
+	//gNumber := 5
 	sha1String := clientNonce + serverNonce
 	sha1Key := sha1.Sum([]byte(sha1String))
 	sx16 := fmt.Sprintf("%x", sha1Key)
@@ -156,8 +154,7 @@ func (c *connect) Req_DHParam(ctx context.Context, in *pb.NewMsg) (*pb.NewReplyM
 	sha1Key := sha1.Sum([]byte(sha1String))
 	sx16 := fmt.Sprintf("%x", sha1Key)
 	userSession := client.HGetAll(ctx, sx16).Val()
-	// TODO
-	//randomNumber, err := generateRandomOdd(10, 200)
+	randomNumber, err := generateRandomOdd(10, 200)
 	serverMessageId, err := generateRandomOdd(100, 100000)
 	if err != nil {
 		log.Printf("server messageId is 0!")
@@ -165,8 +162,8 @@ func (c *connect) Req_DHParam(ctx context.Context, in *pb.NewMsg) (*pb.NewReplyM
 	g, err := strconv.ParseInt(userSession["gNumber"], 10, 32)
 	p, err := strconv.ParseInt(userSession["pNumber"], 10, 32)
 	a := in.GetANumber()
-	b := powInt(g, 15, p) % int32(p)
-	publicKey := powInt(int64(a), 15, p) % int32(p)
+	b := powInt(g, randomNumber, p) % int32(p)
+	publicKey := powInt(int64(a), randomNumber, p) % int32(p)
 	client.Set(ctx, strconv.Itoa(int(publicKey)), "ok", 0)
 	client.Del(ctx, sx16)
 
