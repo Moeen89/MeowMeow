@@ -46,6 +46,7 @@ func main() {
 		MessageId:   int32(messageId),
 		ANumber:     a})
 	b := newReplyMsg.GetBNumber()
+	fmt.Println(b)
 	publicKey := powInt(int64(b), 6, 23) % int32(23)
 	fmt.Println(publicKey)
 }

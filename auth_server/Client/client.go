@@ -1,15 +1,9 @@
 package main
 
 import (
-	"context"
 	"crypto/rand"
 	"fmt"
-	"log"
 	"math/big"
-	"time"
-
-	pb "example.com/go-connection-grpc/GRPC"
-	"google.golang.org/grpc"
 )
 
 const (
@@ -58,7 +52,7 @@ func generateRandomEven(min, max int64) (int64, error) {
 	}
 }
 
-func main() {
+/*func main() {
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
@@ -81,4 +75,4 @@ func main() {
 		MessageId: int32(messageId)})
 	log.Printf("clientNonce: %s \n serverNonce: %s \n messageID: %d \n pNumber: %d \n gNumber: %d",
 		replyMsg.GetNonce(), replyMsg.GetServerNonce(), replyMsg.GetMessageId(), replyMsg.GetP(), replyMsg.GetG())
-}
+}*/

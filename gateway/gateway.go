@@ -37,7 +37,7 @@ func keyFunc(c *gin.Context) string {
 }
 
 func errorHandler(c *gin.Context, info ratelimit.Info) {
-	c.String(429, "Too many requests. Try again in "+time.Until(info.ResetTime).String())
+	//c.String(429, "Too many requests. Try again in "+time.Until(info.ResetTime).String())
 	client.Set(c, "ip"+c.ClientIP(), "banned", 24*time.Hour)
 }
 
@@ -68,9 +68,11 @@ func creatLim() gin.HandlerFunc {
 		ip := c.ClientIP()
 		if client.Exists(c, "ip"+ip).Val() == 1 {
 			c.String(429, "Too many requests. banned for 24h")
+			c.AbortWithStatus(http.StatusTooManyRequests)
 			return
+		} else {
+			c.Next()
 		}
-		c.Next()
 
 	}
 }
@@ -162,8 +164,8 @@ func createReverseProxyBiz(target string) gin.HandlerFunc {
 		// Create the reverse proxy
 		jsonData, _ := ioutil.ReadAll(c.Request.Body)
 		//proxy := httputil.NewSingleHostReverseProxy(targetURL)
-		authtoken := gjson.Get(string(jsonData), "authKey")
-		if authtoken.Str == "" {
+		authToken := gjson.Get(string(jsonData), "authKey")
+		if authToken.Str == "" {
 			c.JSON(http.StatusForbidden, gin.H{
 				"message": "AUTH require",
 			})
@@ -185,7 +187,7 @@ func createReverseProxyBiz(target string) gin.HandlerFunc {
 			messageId := gjson.Get(string(jsonData), "messageId")
 			messageid, _ := strconv.Atoi(messageId.Str)
 			message_id := int32(messageid)
-			authKey := authtoken.Str
+			authKey := authToken.Str
 			authkey, _ := strconv.Atoi(authKey)
 			authkey32 := int32(authkey)
 
@@ -222,7 +224,7 @@ func createReverseProxyBiz(target string) gin.HandlerFunc {
 			messageId := gjson.Get(string(jsonData), "messageId")
 			messageid, _ := strconv.Atoi(messageId.Str)
 			message_id := int32(messageid)
-			authKey := authtoken.Str
+			authKey := authToken.Str
 			authkey, _ := strconv.Atoi(authKey)
 			authkey32 := int32(authkey)
 
